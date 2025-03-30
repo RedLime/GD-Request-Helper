@@ -1,0 +1,23 @@
+{
+  "name": "gd-req-helper-v2",
+  "version": "2.0.0",
+  "description": "request helper",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "author": "RedLime",
+  "license": "ISC",
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "discord.js": "^14.18.0",
+    "mongoose": "^8.12.1",
+    "mysql2": "^3.13.0",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.22.0",
+    "eslint": "^9.22.0"
+  },
+  "type": "module"
+}

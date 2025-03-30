@@ -1,0 +1,26 @@
+{
+    "__comment": "If you want to use config file, copy and paste this file and rename to 'config.json'.",
+    "url": {
+        "server": "https://me.redlimerl.com/discord/tech-support",
+        "donate": "https://ko-fi.com/redlimerl",
+        "repo": "https://github.com/RedLime/GD-Request-Helper",
+        "gameServer": "http://www.boomlings.com/database",
+        "gdBrowser": "https://gdbrowser.com"
+    },
+    "discord": {
+        "token": "discord bot token here",
+        "id": "discord bot(application) id here"
+    },
+    "mongodb": {
+        "host": "127.0.0.1",
+        "port": 27017,
+        "user": "user",
+        "password": "password",
+        "database": "database"
+    },
+    "debug": {
+        "__comment": "this section is just for debugging. You don't need to use it",
+        "enable": false,
+        "guildId": "0"
+    }
+}

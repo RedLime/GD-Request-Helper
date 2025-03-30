@@ -1,0 +1,6 @@
+node_modules/
+package-lock.json
+config.json
+config_product.json
+migrate/
+emoji_product.json
