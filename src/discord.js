@@ -43,7 +43,7 @@ export function init() {
 
     setInterval(async () => {
         try {
-            await ServerManager.checkCloseCycle();
+            ServerManager.checkCloseCycle();
             app.client.user.setActivity({ type: ActivityType.Custom, name: status[parseInt(Math.random() * status.length)].replace('{servers}', app.client.guilds.cache.size) });
         } catch (e) {
             console.error(e);

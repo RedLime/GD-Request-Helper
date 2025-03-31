@@ -23,6 +23,8 @@ console.log('Trying to login Discord client...');
 await client.login(config.discord.token);
 console.log('Login! ' + client.user.tag);
 (async () => {
+    // const { start: migrateStart } = await import("./src/migrate.js");
+    // await migrateStart();
     const { init: initDiscordInteraction } = await import("./src/discord.js");
     initDiscordInteraction();
 })();
