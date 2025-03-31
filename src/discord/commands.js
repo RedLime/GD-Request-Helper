@@ -1,6 +1,6 @@
 import * as app from '../../app.js';
 // eslint-disable-next-line no-unused-vars
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionContextType, SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, Colors } from "discord.js";
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, InteractionContextType, SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, Colors, ChannelType } from "discord.js";
 import Submission from '../class/submission.js';
 import LevelRequest from '../class/request.js';
 import ServerManager from '../class/server_manager.js';
@@ -224,6 +224,17 @@ export default [
             .setContexts(InteractionContextType.Guild)
             .setDefaultMemberPermissions(PermissionsBitField.Flags.Administrator),
         async execute(interaction) {
+            if (!interaction.channel || interaction.channel.type != ChannelType.GuildText) {
+                await interaction.reply({ content: app.message.errorReviewUpdate + '\n' + app.messageFormat('errorChannelInvalid', interaction.channel.id), embeds: [], components: [], flags: MessageFlags.Ephemeral });
+                return;
+            }
+
+            const permission = interaction.channel.permissionsFor(interaction.guild.members.me);
+            if (!permission.has([PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages])) {
+                await interaction.reply({ content: app.message.errorReviewUpdate + '\n' + app.messageFormat('errorPermissionChannelMessage', interaction.channel.id), embeds: [], components: [], flags: MessageFlags.Ephemeral });
+                return null;
+            }
+
             const modal = new ModalBuilder().setCustomId('setup').setTitle('Setup Request Submit Button').addComponents(new ActionRowBuilder().addComponents(
                 new TextInputBuilder().setCustomId('context').setMaxLength(1000).setRequired(false).setPlaceholder('Notice to users... (Support Discord Markdown)').setLabel('Notice (Optional)').setStyle(TextInputStyle.Paragraph)
             ));
