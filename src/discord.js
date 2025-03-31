@@ -48,5 +48,5 @@ export function init() {
         } catch (e) {
             console.error(e);
         }
-    }, 30 * 1000);
+    }, 60 * 1000);
 }
