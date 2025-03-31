@@ -648,6 +648,7 @@ export default class ServerManager {
             const modal = new ModalBuilder()
                 .setCustomId('config-cooldown')
                 .setTitle('Update Request Cooldown')
+                .setRequired(true)
                 .addComponents(new ActionRowBuilder().addComponents(
                     new TextInputBuilder().setCustomId('cooldown').setLabel('Cooldown ([0d 0h 0m 0s] Format)')
                         .setPlaceholder(`Ex) '2h 30m', '1d 12h' / Type '0s' to disable cooldown.`).setStyle(TextInputStyle.Short).setMaxLength(15).setRequired(true)
@@ -807,6 +808,7 @@ export default class ServerManager {
         const modal = new ModalBuilder()
             .setCustomId(`config-message:${type}`)
             .setTitle(`Update Message (${this.ERROR_MESSAGE_TYPE[type]})`)
+            .setRequired(true)
             .addComponents(new ActionRowBuilder().addComponents(
                 new TextInputBuilder().setCustomId('message').setLabel('Message').setPlaceholder(this.ERROR_MESSAGE_PLACEHOLDER[type]).setValue(serverConfig.get(`message.${type}`)).setMinLength(3).setMaxLength(200).setStyle(TextInputStyle.Short).setRequired(true)
             ));
@@ -841,6 +843,7 @@ export default class ServerManager {
             const modal = new ModalBuilder()
                 .setCustomId(`config-question`)
                 .setTitle('Update Additinal Question')
+                .setRequired(true)
                 .addComponents(new ActionRowBuilder().addComponents(question));
             await interaction.showModal(modal);
         } else {

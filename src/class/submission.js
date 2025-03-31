@@ -173,7 +173,7 @@ export default class Submission {
             .setRequired(false);
         modal.addComponents(new ActionRowBuilder().addComponents(videoInput));
 
-        if (serverConfig.extraQuestion.enable) {
+        if (serverConfig.extraQuestion.enable && serverConfig.extraQuestion.context) {
             const extraAnswerInput = new TextInputBuilder()
                 .setCustomId('extra')
                 .setLabel(serverConfig.extraQuestion.context.substring(0, 45))
