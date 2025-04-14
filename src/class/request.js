@@ -345,7 +345,7 @@ export default class LevelRequest {
             .setThumbnail(this.getVideoThumbnailUrl())
             .setFooter({ text: `Request ID: #${this.id}` })
             .setTimestamp(this.rawData.createdAt)
-            .setColor(this.state != LevelRequestState.READY ? Colors.Red : this.reviews.size ? Colors.Green : Colors.Yellow)
+            .setColor(this.state != LevelRequestState.READY ? Colors.Red : Object.keys(this.reviews).length ? Colors.Green : Colors.Yellow)
             .addFields({ name: 'Level ID', value: `${this.level.id}`, inline: true })
             .addFields(this.level.description ? { name: 'Level Description', value: this.level.description || 'None', inline: false } : [])
             .addFields(
