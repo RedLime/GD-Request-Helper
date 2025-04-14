@@ -157,7 +157,7 @@ export default class LevelRequest {
             return;
         }
 
-        if (!await LevelRequest.isAvailableReviewNotifyChannel(interaction, serverConfig, isSent, (c) => interaction.replied(c))) return;
+        if (!await LevelRequest.isAvailableReviewNotifyChannel(interaction, serverConfig, isSent, (c) => interaction.reply(c))) return;
 
         const modal = new ModalBuilder()
             .setCustomId(`review:${request.id}:${reviewType.id}`)
@@ -202,7 +202,7 @@ export default class LevelRequest {
         }
 
         const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
-        const channel = await LevelRequest.isAvailableReviewNotifyChannel(interaction, serverConfig, reviewType.id > 0, (c) => interaction.replied(c));
+        const channel = await LevelRequest.isAvailableReviewNotifyChannel(interaction, serverConfig, reviewType.id > 0, (c) => interaction.editReply(c));
         if (!channel) return;
 
         const embed = new EmbedBuilder().setDescription(`## ${app.emoji[reviewType.type]} ${reviewType.title}\n### ${request.isGDPS ? request.level.name : `[${request.level.name}](${app.config.url.gdBrowser}/${request.level.id})`} \`[${request.level.id}]\`${reviewContext ? `\n-# Review:\n${reviewContext}` : ''}\n-# Submitted by <@${request.userId}>, Reviewed by <@${interaction.user.id}>`);
