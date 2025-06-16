@@ -73,6 +73,7 @@ export default class ServerManager {
         'duringCooldown': app.message.defaultMessageRequestCooldown
     };
     static ROLE_TYPE = {
+        'admin': { emoji: app.emoji.lock, name: 'Admin Role', field: 'adminRoleId' },
         'moderator': { emoji: app.emoji.moderator, name: 'Moderator Role', field: 'moderatorRoleId' },
         'whitelist': { emoji: app.emoji.friends, name: 'Request Whitelist Role', field: 'whitelistRoleId' },
         'blacklist': { emoji: app.emoji.blocked, name: 'Request Blacklist Role', field: 'blockedRoleId' },
@@ -277,11 +278,26 @@ export default class ServerManager {
 
     /**
      * @param {ChatBaseInteraction} interaction
+     * @param {Configure} serverConfig
+     * @param {(context: import("discord.js").InteractionReplyOptions) => Promise<any>} followMessage
+     */
+    static async memberHasPemission(interaction, serverConfig, followMessage) {
+        if (!interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) && (!serverConfig.adminRoleId || !interaction.member.roles.cache.has(serverConfig.adminRoleId))) {
+            await followMessage({ content: serverConfig.adminRoleId ? app.messageFormat('errorPermissionAdminRole', serverConfig.adminRoleId) : app.message.errorPermissionAdminRoleNone, flags: MessageFlags.Ephemeral });
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * @param {ChatBaseInteraction} interaction
      * @param {(context: import("discord.js").InteractionReplyOptions) => Promise<any>} followMessage
      * @param {number} page
      */
     static async generateConfigContext(interaction, followMessage, page = 1) {
         const serverConfig = await ServerConfig.findOneAndUpdate({ _id: interaction.guildId }, { $setOnInsert: { _id: interaction.guildId } }, { new: true, upsert: true }).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, followMessage)) return;
+
         const embeds = [], components = [];
 
         components.push(new ActionRowBuilder().addComponents(
@@ -521,14 +537,16 @@ export default class ServerManager {
 
         if (!selectedRole) {
             components.push(new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:edit:admin`).setEmoji(this.ROLE_TYPE.admin.emoji).setLabel('Change Admin Role').setStyle(serverConfig.adminRoleId ? ButtonStyle.Primary : ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:remove:admin`).setEmoji(app.emoji.remove).setLabel('Remove Admin Role').setStyle(ButtonStyle.Secondary).setDisabled(!serverConfig.adminRoleId),
+            ));
+            components.push(new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:edit:moderator`).setEmoji(this.ROLE_TYPE.moderator.emoji).setLabel('Change Moderator Role').setStyle(serverConfig.moderatorRoleId ? ButtonStyle.Primary : ButtonStyle.Danger),
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:remove:moderator`).setEmoji(app.emoji.remove).setLabel('Remove Moderator Role').setStyle(ButtonStyle.Secondary).setDisabled(!serverConfig.moderatorRoleId),
             ));
             components.push(new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:edit:whitelist`).setEmoji(this.ROLE_TYPE.whitelist.emoji).setLabel('Change Whitelist Role').setStyle(serverConfig.whitelistRoleId ? ButtonStyle.Secondary : ButtonStyle.Primary),
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:remove:whitelist`).setEmoji(app.emoji.remove).setLabel('Remove Whitelist Role').setStyle(ButtonStyle.Secondary).setDisabled(!serverConfig.whitelistRoleId),
-            ));
-            components.push(new ActionRowBuilder().addComponents(
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:edit:blacklist`).setEmoji(this.ROLE_TYPE.blacklist.emoji).setLabel('Change Blacklist Role').setStyle(serverConfig.blockedRoleId ? ButtonStyle.Secondary : ButtonStyle.Primary),
                 new ButtonBuilder().setCustomId(`config-role:${interaction.user.id}:remove:blacklist`).setEmoji(app.emoji.remove).setLabel('Remove Blacklist Role').setStyle(ButtonStyle.Secondary).setDisabled(!serverConfig.blockedRoleId),
             ));
@@ -650,6 +668,9 @@ export default class ServerManager {
     static async onSelectOptionMenu(interaction, userId) {
         if (interaction.user.id != userId) return;
 
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.reply(c))) return;
+
         const option = interaction.values[0];
 
         if (option == 'cooldown') {
@@ -702,6 +723,10 @@ export default class ServerManager {
     /** @param {ModalSubmitInteraction} interaction */
     static async onUpdateCooldown(interaction) {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const cooldown = app.formatDHMSDuration(interaction.fields.getTextInputValue('cooldown'));
 
         if (cooldown === null || !Number.isSafeInteger(cooldown)) {
@@ -729,6 +754,10 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         await interaction.deferUpdate();
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         if (field == 'choose') {
             await this.generateRequestChannelsContext(interaction, (c) => interaction.editReply(c), typeIndex);
         } else {
@@ -748,6 +777,10 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         await interaction.deferUpdate();
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const channel = interaction.channels.firstKey();
         const levelType = LevelType.all()[typeIndex];
         const keyName = `request.${levelType.field}.channel`;
@@ -764,6 +797,10 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         await interaction.deferUpdate();
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const channel = interaction.channels.firstKey();
         const channelType = this.RESULT_CHANNEL_TYPE[type];
         if (!channelType) return;
@@ -781,6 +818,10 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         await interaction.deferUpdate();
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const target = this.ROLE_TYPE[type];
         if (!target) return;
         await ServerConfig.updateOne({ _id: interaction.guildId }, { [target.field]: null });
@@ -796,6 +837,10 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         await interaction.deferUpdate();
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const selectedRole = interaction.roles.firstKey();
         const target = this.ROLE_TYPE[type];
         if (!target) return;
@@ -811,6 +856,8 @@ export default class ServerManager {
         if (interaction.user.id != userId) return;
 
         const serverConfig = await ServerConfig.findById(interaction.guildId);
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.reply(c))) return;
+
         const type = interaction.values[0];
         const modal = new ModalBuilder()
             .setCustomId(`config-message:${type}`)
@@ -827,6 +874,10 @@ export default class ServerManager {
      */
     static async onMessageUpdateSubmit(interaction, type) {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const message = interaction.fields.getTextInputValue('message');
 
         await ServerConfig.updateOne({ _id: interaction.guildId }, { [`message.${type}`]: message });
@@ -842,8 +893,10 @@ export default class ServerManager {
     static async onSelectAdditionalQuestionUpdate(interaction, userId, type) {
         if (interaction.user.id != userId) return;
 
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.reply(c))) return;
+
         if (type == 'question') {
-            const serverConfig = await ServerConfig.findById(interaction.guildId);
             const question = new TextInputBuilder().setCustomId('question').setLabel('Question').setMinLength(3).setMaxLength(45).setRequired(true).setStyle(TextInputStyle.Short);
             if (serverConfig.extraQuestion.context) question.setValue(serverConfig.extraQuestion.context);
             const modal = new ModalBuilder()
@@ -862,6 +915,10 @@ export default class ServerManager {
     /** @param {ModalSubmitInteraction} interaction */
     static async onAdditionalQuestionSubmit(interaction) {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.editReply(c))) return;
+
         const question = interaction.fields.getTextInputValue('question');
 
         await ServerConfig.updateOne({ _id: interaction.guildId }, { 'extraQuestion.context': question });
@@ -876,6 +933,9 @@ export default class ServerManager {
      */
     static async onSelectLoggingChannel(interaction, userId, type) {
         if (interaction.user.id != userId) return;
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.reply(c))) return;
 
         const channel = interaction.channels.first();
         if (channel.type != ChannelType.GuildText) return;
@@ -898,6 +958,9 @@ export default class ServerManager {
      */
     static async onUpdateGDPSMode(interaction, userId) {
         if (interaction.user.id != userId) return;
+
+        const serverConfig = await ServerConfig.findById(interaction.guildId).lean().exec();
+        if (!this.memberHasPemission(interaction, serverConfig, c => interaction.reply(c))) return;
 
         await interaction.deferUpdate();
         const keyName = `gdpsMode`;

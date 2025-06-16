@@ -31,6 +31,8 @@
     "warningInvalidRejectChannel": "The channel of request reject message is not exist or invalid.",
 
     "errorPermissionChannelMessage": "This bot doesn't have permissions(`View Channel`, `Send Messages`) for <#{0}> channel.",
+    "errorPermissionAdminRole": "You don't have the <@&{0}> role or administer permission for this server.",
+    "errorPermissionAdminRoleNone": "You don't have administer permission for this server.",
     "errorPermissionModeratorRole": "You don't have the <@&{0}> role for this server.",
     "errorPermissionBlacklistRole": "Sorry, You can't submit the level request on this server.",
     "errorPermissionWhitelistRole": "Sorry, You are not whitelisted to submit the level request on this server.",

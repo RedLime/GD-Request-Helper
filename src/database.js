@@ -12,6 +12,7 @@ const map = (obj, def = {}) => {
 export const ServerConfig = app.connection.model('config', new Schema({
     _id: String,
     gdpsMode: { type: Boolean, default: false },
+    adminRoleId: { type: String, default: null },
     moderatorRoleId: { type: String, default: null },
     whitelistRoleId: { type: String, default: null },
     blockedRoleId: { type: String, default: null },
