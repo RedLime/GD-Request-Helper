@@ -149,6 +149,10 @@ export default class ServerManager {
         }
         await serverConfig.save();
 
+        const permission = channel.permissionsFor(interaction.guild.members.me);
+        if (!permission.has([PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages])) {
+            return conditions;
+        }
         channel.send({ content: `Request is opened now. Until: ${conditions.join(' or ')}\n${interaction ? `-# Triggered by: <@${interaction.user.id}>` : ''}`, allowedMentions: { users: [] } });
         return conditions;
     }
@@ -200,6 +204,10 @@ export default class ServerManager {
             'manual': 'Manually.'
         };
 
+        const permission = channel.permissionsFor(interaction.guild.members.me);
+        if (!permission.has([PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages])) {
+            return;
+        }
         channel.send({ content: `Request is closed now. Closed by: ${closeContext[type]}\n${interaction ? `-# Triggered by: <@${interaction.user.id}>` : ''}`, allowedMentions: { users: [] } });
     }
 

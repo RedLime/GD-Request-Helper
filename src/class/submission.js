@@ -507,10 +507,17 @@ export default class Submission {
         const serverConfig = await ServerConfig.findById(this.guildId).exec();
         if (!await Submission.checkAvailableSubmission(interaction, user, serverConfig, (c) => interaction.editReply(c), this.getLevelType())) return;
 
-        const levelRequest = await LevelRequest.create(this);
-
         const channel = await app.client.channels.fetch(this.getLevelType().configSelector(serverConfig).channel, { force: false }).catch(() => null);
         if (!channel) return;
+
+        const permission = channel.permissionsFor(interaction.guild.members.me);
+        if (!permission.has([PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages])) {
+            await interaction.editReply({ content: app.message.errorSubmitCreate + '\n' + app.messageFormat('errorPermissionChannelMessage', channel.id), embeds: [], components: [] });
+            return;
+        }
+
+        const levelRequest = await LevelRequest.create(this);
+
         await channel.send(levelRequest.generateContext());
 
         await ServerManager.onRequestSubmitted(serverConfig);

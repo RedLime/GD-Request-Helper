@@ -205,6 +205,12 @@ export default class LevelRequest {
         const channel = await LevelRequest.isAvailableReviewNotifyChannel(interaction, serverConfig, reviewType.id > 0, (c) => interaction.editReply(c));
         if (!channel) return;
 
+        const permission = channel.permissionsFor(interaction.guild.members.me);
+        if (!permission.has([PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.SendMessages])) {
+            await interaction.editReply({ content: app.message.errorReviewUpdate + '\n' + app.messageFormat('errorPermissionChannelMessage', channel.id), embeds: [], components: [] });
+            return;
+        }
+
         const embed = new EmbedBuilder().setDescription(`## ${app.emoji[reviewType.type]} ${reviewType.title}\n### ${request.isGDPS ? request.level.name : `[${request.level.name}](${app.config.url.gdBrowser}/${request.level.id})`} \`[${request.level.id}]\`${reviewContext ? `\n-# Review:\n${reviewContext}` : ''}\n-# Submitted by <@${request.userId}>, Reviewed by <@${interaction.user.id}>`);
         if (imageAttachment && URL.canParse(imageAttachment)) embed.setImage(imageAttachment);
         const message = await channel.send({ content: `-# ||<@${request.userId}>||`, embeds: [embed] });
